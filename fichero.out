@@ -1,0 +1,9 @@
+total 91
+drwxrwxrwx 1 root root  4096 jun 13 05:23 .
+drwxrwxrwx 1 root root  4096 jun 13 02:54 ..
+-rwxrwxrwx 1 root root 19845 jun 13 02:34 fichero.in
+-rwxrwxrwx 1 root root     0 jun 13 05:24 fichero.out
+-rwxrwxrwx 1 root root  7559 jun 13 05:20 job_control.c
+-rwxrwxrwx 1 root root  3620 jun 13 05:20 job_control.h
+-rwxrwxrwx 1 root root 31744 jun 13 05:23 Shell
+-rwxrwxrwx 1 root root 20958 jun 13 05:20 Shell_project.c

@@ -7,6 +7,9 @@ Grados I. Informatica, Computadores & Software
 Dept. Arquitectura de Computadores - UMA
 
 Some code adapted from "Fundamentos de Sistemas Operativos", Silberschatz et al.
+
+Algunas modificaciones realizadas por Alberto Zamora Jiménez
+2º Grado en Ingeniería Informática "A"
 --------------------------------------------------------*/
 
 #include "job_control.h"
@@ -17,11 +20,11 @@ Some code adapted from "Fundamentos de Sistemas Operativos", Silberschatz et al.
 
 // -----------------------------------------------------------------------
 //  get_command() reads in the next command line, separating it into distinct tokens
-//  using whitespace as delimiters. setup() sets the args parameter as a 
+//  using whitespace as delimiters. setup() sets the args parameter as a
 //  null-terminated string.
 // -----------------------------------------------------------------------
 
-void get_command(char inputBuffer[], int size, char *args[],int *background)
+void get_command(char inputBuffer[], int size, char *args[],int *background, int *redirectpos, int *redirecttype)
 {
 	int length, /* # of characters in the command line */
 		i,      /* loop index for accessing inputBuffer array */
@@ -30,24 +33,26 @@ void get_command(char inputBuffer[], int size, char *args[],int *background)
 
 	ct = 0;
 	*background=0;
+	*redirecttype = -1;
+	*redirectpos = -1;
 
 	/* read what the user enters on the command line */
-	length = read(STDIN_FILENO, inputBuffer, size);  
+	length = read(STDIN_FILENO, inputBuffer, size);
 
 	start = -1;
 	if (length == 0)
 	{
 		printf("\nBye\n");
 		exit(0);            /* ^d was entered, end of user command stream */
-	} 
+	}
 	if (length < 0){
 		perror("error reading the command");
 		exit(-1);           /* terminate with error code of -1 */
 	}
 
 	/* examine every character in the inputBuffer */
-	for (i=0;i<length;i++) 
-	{ 
+	for (i=0;i<length;i++)
+	{
 		switch (inputBuffer[i])
 		{
 		case ' ':
@@ -55,6 +60,15 @@ void get_command(char inputBuffer[], int size, char *args[],int *background)
 			if(start != -1)
 			{
 				args[ct] = &inputBuffer[start];    /* set up pointer */
+				if(inputBuffer[i-1] == '>'){
+					*redirectpos = ct;
+					*redirecttype = 0;
+				}
+				else if(inputBuffer[i-1] == '<'){
+
+					*redirectpos = ct;
+					*redirecttype = 1;
+				}
 				ct++;
 			}
 			inputBuffer[i] = '\0'; /* add a null char; make a C string */
@@ -64,7 +78,7 @@ void get_command(char inputBuffer[], int size, char *args[],int *background)
 		case '\n':                 /* should be the final char examined */
 			if (start != -1)
 			{
-				args[ct] = &inputBuffer[start];     
+				args[ct] = &inputBuffer[start];
 				ct++;
 			}
 			inputBuffer[i] = '\0';
@@ -78,7 +92,20 @@ void get_command(char inputBuffer[], int size, char *args[],int *background)
 				*background  = 1;
 				if (start != -1)
 				{
-					args[ct] = &inputBuffer[start];     
+					args[ct] = &inputBuffer[start];
+					ct++;
+				}
+				inputBuffer[i] = '\0';
+				args[ct] = NULL; /* no more arguments to this command */
+				i=length; // make sure the for loop ends now
+
+			}
+      if (inputBuffer[i] == '#') // background indicator
+			{
+				*background  = 2;
+				if (start != -1)
+				{
+					args[ct] = &inputBuffer[start];
 					ct++;
 				}
 				inputBuffer[i] = '\0';
@@ -88,9 +115,9 @@ void get_command(char inputBuffer[], int size, char *args[],int *background)
 			}
 			else if (start == -1) start = i;  // start of new argument
 		}  // end switch
-	}  // end for   
+	}  // end for
 	args[ct] = NULL; /* just in case the input line was > MAXLINE */
-} 
+}
 
 
 // -----------------------------------------------------------------------
@@ -119,7 +146,7 @@ void add_job (job * list, job * item)
 }
 
 // -----------------------------------------------------------------------
-/* elimina el elemento indicado de la lista 
+/* elimina el elemento indicado de la lista
 devuelve 0 si no pudo realizarse con exito */
 int delete_job(job * list, job * item)
 {
@@ -171,7 +198,7 @@ void print_list(job * list, void (*print)(job *))
 	int n=1;
 	job * aux=list;
 	printf("Contents of %s:\n",list->command);
-	while(aux->next!= NULL) 
+	while(aux->next!= NULL)
 	{
 		printf(" [%d] ",n);
 		print(aux->next);
@@ -207,9 +234,9 @@ void terminal_signals(void (*func) (int))
 	signal (SIGINT,  func); // crtl+c interrupt tecleado en el terminal
 	signal (SIGQUIT, func); // ctrl+\ quit tecleado en el terminal
 	signal (SIGTSTP, func); // crtl+z Stop tecleado en el terminal
-	signal (SIGTTIN, func); // proceso en segundo plano quiere leer del terminal 
+	signal (SIGTTIN, func); // proceso en segundo plano quiere leer del terminal
 	signal (SIGTTOU, func); // proceso en segundo plano quiere escribir en el terminal
-}		
+}
 
 // -----------------------------------------------------------------------
 void block_signal(int signal, int block)
@@ -231,15 +258,15 @@ void block_signal(int signal, int block)
 }
 
 void print_analyzed_status(enum status s, int info){
-	
+
 	switch(s){
-		
+
 		case SUSPENDED: printf("Proceso suspendido\n");
 		break;
-		
+
 		case SIGNALED: printf("Hemos recibido una señal y estamos esperando\n");
 		break;
-		
+
 		case EXITED: printf("Proceso terminado\n");
 		break;
 	}
