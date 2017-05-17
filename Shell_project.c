@@ -21,6 +21,7 @@ Autor: Alberto Zamora Jiménez
 #include "stdio.h"
 #include "time.h"
 #include "string.h"
+#include "errno.h"
 
 //Defining some colors here
 #define ANSI_COLOR_RED 		 "\x1b[31;1;1m"
@@ -225,8 +226,17 @@ int main(void)
 		 *cd es un comando interno típico, se usa para cambiar al directorio indicado pasado por argumento
 		 */
 
-		else if(strcmp(args[0], "cd")==0){ //cd built-in command, changes directory to the one passed as argument
-					chdir(args[1]);
+		else if(strcmp(args[0], "cd")==0){
+			
+				if( -1 == chdir(args[1])){
+					
+					int errorsv = errno;
+					
+					if(errorsv == ENOENT){
+						
+						perror(args[1]);
+					}
+				}
 					continue;
 				}
 
