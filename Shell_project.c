@@ -21,6 +21,7 @@ Autor: Alberto Zamora Jiménez
 #include "stdio.h"
 #include "time.h"
 #include "string.h"
+#include "errno.h"
 
 //Definimos algunos colores aquí
 #define ANSI_COLOR_RED 		 "\x1b[31;1;1m"
@@ -279,7 +280,16 @@ int main(void)
 		 */
 
 		else if(strcmp(args[0], "cd")==0){
-					chdir(args[1]);
+			
+				if( -1 == chdir(args[1])){
+					
+					int errorsv = errno;
+					
+					if(errorsv == ENOENT){
+						
+						perror(args[1]);
+					}
+				}
 					continue;
 				}
 
